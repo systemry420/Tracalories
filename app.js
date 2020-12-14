@@ -77,6 +77,27 @@ const UICtrl = (function () {
                 calories: document.querySelector(UIselectors.itemCaloriesInput).value
             }
         },
+        addListItem: function (item) {
+            document.querySelector(UIselectors.itemList).getElementsByClassName.display = 'block'
+            const li = document.createElement('li')
+            li.className = 'collection-item'
+            li.id = `item-${item.id}`
+            li.innerHTML = `
+                <strong>${item.name}: </strong> <em>${item.calories} Calories</em>
+                <a href="#" class="secondary-content">
+                    <i class="edit-item fa fa-pencil"></i>
+                </a>
+            `
+
+            document.querySelector(UIselectors.itemList).insertAdjacentElement('beforeend', li)
+        },
+        clearInput: function () {
+            document.querySelector(UIselectors.itemNameInput).value = ''
+            document.querySelector(UIselectors.itemCaloriesInput).value = ''
+        },
+        hideList: function () {
+            document.querySelector(UIselectors.itemList).getElementsByClassName.display = 'none'
+        },
         getSelectors: function () {
             return UIselectors
         }
@@ -99,6 +120,10 @@ const App = (function (ItemCtrl, UICtrl) {
 
         if(input.name !== '' && input.calories !== '') {
             const newItem = ItemCtrl.addItem(input.name, input.calories)
+
+            UICtrl.addListItem(newItem)
+
+            UICtrl.clearInput()
         }
         
         e.preventDefault()
@@ -110,9 +135,14 @@ const App = (function (ItemCtrl, UICtrl) {
             // fetch items
             const items = ItemCtrl.getItems()
 
-            // populate list
-            UICtrl.populateItemList(items)
-            
+            // check for items
+            if(items.length === 0) {
+                UICtrl.hideList()
+            } else {
+                // populate list
+                UICtrl.populateItemList(items)
+            }
+
             // load events
             loadEventListeners()
         }

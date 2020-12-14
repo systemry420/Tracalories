@@ -38,14 +38,31 @@ const ItemCtrl = (function () {
 
             return newItem
         },
+        getItemById: function (id) {
+            let found = null
+            data.items.forEach(function (item) {
+                if (item.id === id) {
+                    found = item
+                }
+            })
+            return found
+        },
+        setCurrentItem: function (item) {
+            data.currentItem = item
+        },
+        getCurrentItem: function () {
+            return data.currentItem
+        },
         getTotalCalories: function () {
             let total = 0
 
             data.items.forEach(function (item) {
                 total += item.calories
+                console.log(total);
             })
 
             data.totalCalories = total
+            console.log(total);
 
             return data.totalCalories
         },
@@ -60,9 +77,12 @@ const UICtrl = (function () {
     const UIselectors = {
         itemList: '#item-list',
         addBtn: '.add-btn',
+        updateBtn: '.update-btn',
+        deleteBtn: '.delete-btn',
+        backBtn: '.back-btn',
         itemNameInput: '#item-name',
         itemCaloriesInput: '#item-calories',
-        totalCalories: '.total-calories'
+        totalCalories: '.total-calories',
     }
 
     return {
@@ -107,11 +127,29 @@ const UICtrl = (function () {
             document.querySelector(UIselectors.itemNameInput).value = ''
             document.querySelector(UIselectors.itemCaloriesInput).value = ''
         },
+        addItemToForm: function () {
+            document.querySelector(UIselectors.itemNameInput).value = ItemCtrl.getCurrentItem().name
+            document.querySelector(UIselectors.itemCaloriesInput).value = ItemCtrl.getCurrentItem().calories
+            UICtrl.showEditState()
+        },
         hideList: function () {
-            document.querySelector(UIselectors.itemList).getElementsByClassName.display = 'none'
+            document.querySelector(UIselectors.itemList).style.display = 'none'
         },
         showTotalCalories: function (total) {
             document.querySelector(UIselectors.totalCalories).textContent = total
+        },
+        clearEditState: function () {
+            UICtrl.clearInput()
+            document.querySelector(UIselectors.updateBtn).style.display = 'none'
+            document.querySelector(UIselectors.deleteBtn).style.display = 'none'
+            document.querySelector(UIselectors.backBtn).style.display = 'none'
+            document.querySelector(UIselectors.addBtn).style.display = 'inline'
+        },
+        showEditState: function () {
+            document.querySelector(UIselectors.updateBtn).style.display = 'inline'
+            document.querySelector(UIselectors.deleteBtn).style.display = 'inline'
+            document.querySelector(UIselectors.backBtn).style.display = 'inline'
+            document.querySelector(UIselectors.addBtn).style.display = 'none'
         },
         getSelectors: function () {
             return UIselectors
@@ -128,6 +166,9 @@ const App = (function (ItemCtrl, UICtrl) {
         const UIselectors = UICtrl.getSelectors()
 
         document.querySelector(UIselectors.addBtn).addEventListener('click', itemAddSubmit)
+
+        // edit icon
+        document.querySelector(UIselectors.itemList).addEventListener('click', itemEditClick)
     }
 
     const itemAddSubmit = function (e) {
@@ -139,24 +180,35 @@ const App = (function (ItemCtrl, UICtrl) {
             UICtrl.addListItem(newItem)
 
             UICtrl.clearInput()
+
+            App.init()
         }
-        
         e.preventDefault()
-        
     }
-    
+
+    const itemEditClick = function (e) {
+        if(e.target.classList.contains('edit-item')) {
+            const listId = e.target.parentNode.parentNode.id
+            const listIdArr = listId.split('-')
+            const id = parseInt(listIdArr[1])
+
+            const itemToEdit = ItemCtrl.getItemById(id)
+
+            ItemCtrl.setCurrentItem(itemToEdit)
+
+            UICtrl.addItemToForm()
+        }
+    }
+
     return {
         init: function () {
+            UICtrl.clearEditState()
+
             // fetch items
             const items = ItemCtrl.getItems()
+            console.log(items);
 
-            // check for items
-            if(items.length === 0) {
-                UICtrl.hideList()
-            } else {
-                // populate list
-                UICtrl.populateItemList(items)
-            }
+            UICtrl.populateItemList(items)
 
             const totalCalories = ItemCtrl.getTotalCalories()
 
